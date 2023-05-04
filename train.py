@@ -436,19 +436,28 @@ def train(hyp, opt, device, callbacks):  # hyp is path/to/hyp.yaml or hyp dictio
 
 def parse_opt(known=False):
     parser = argparse.ArgumentParser()
+    # 模型选择 不填表示从头开始训练 也可以指定模型进行训练
     parser.add_argument('--weights', type=str, default=ROOT / 'yolov5s.pt', help='initial weights path')
+    # 配置模型
     parser.add_argument('--cfg', type=str, default='', help='model.yaml path')
+    # 指定训练数据集
     parser.add_argument('--data', type=str, default=ROOT / 'data/coco128.yaml', help='dataset.yaml path')
+    # 超参数
     parser.add_argument('--hyp', type=str, default=ROOT / 'data/hyps/hyp.scratch-low.yaml', help='hyperparameters path')
+    # 迭代次数 500到1000次
     parser.add_argument('--epochs', type=int, default=100, help='total training epochs')
+    # 一次对多少数据进行训练  数值越大对显卡要求越高
     parser.add_argument('--batch-size', type=int, default=16, help='total batch size for all GPUs, -1 for autobatch')
+    # 图片缩放尺寸
     parser.add_argument('--imgsz', '--img', '--img-size', type=int, default=640, help='train, val image size (pixels)')
     parser.add_argument('--rect', action='store_true', help='rectangular training')
+    # 可以修改这个参数来在以前的模型基础上训练 但是需要原来的路径和文件
     parser.add_argument('--resume', nargs='?', const=True, default=False, help='resume most recent training')
     parser.add_argument('--nosave', action='store_true', help='only save final checkpoint')
     parser.add_argument('--noval', action='store_true', help='only validate final epoch')
     parser.add_argument('--noautoanchor', action='store_true', help='disable AutoAnchor')
     parser.add_argument('--noplots', action='store_true', help='save no plot files')
+    # 调优方式
     parser.add_argument('--evolve', type=int, nargs='?', const=300, help='evolve hyperparameters for x generations')
     parser.add_argument('--bucket', type=str, default='', help='gsutil bucket')
     parser.add_argument('--cache', type=str, nargs='?', const='ram', help='image --cache ram/disk')
@@ -483,11 +492,15 @@ def parse_opt(known=False):
 def main(opt, callbacks=Callbacks()):
     # Checks
     if RANK in {-1, 0}:
+        #打印参数
         print_args(vars(opt))
+        #确认git状态，落后的则更新
         check_git_status()
+        #安装的依赖是否满足要求
         check_requirements()
 
     # Resume (from specified or most recent last.pt)
+    #恢复最近一次的运行状态，用于已有模型基础
     if opt.resume and not check_comet_resume(opt) and not opt.evolve:
         last = Path(check_file(opt.resume) if isinstance(opt.resume, str) else get_latest_run())
         opt_yaml = last.parent.parent / 'opt.yaml'  # train options yaml
